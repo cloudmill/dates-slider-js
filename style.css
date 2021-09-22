@@ -1,0 +1,57 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-family: sans-serif;
+}
+
+/*  */
+
+.container {
+  margin: 100px;
+  /* overflow: hidden; */
+
+  border: 1px solid black;
+}
+
+/*  */
+
+/* это компонент */
+.slider {
+  display: flex;
+}
+/* это "держатель" слайдов (этот элемент будет двигаться, длина этого элемента - сумма длин слайдов */
+.slider__wrapper {
+  display: flex;
+
+  transition: 0.5s;
+}
+
+.slider__slide {
+  margin-right: 20px;
+
+  font-size: 25px;
+  cursor: pointer;
+  transition: 0.5s;
+}
+.slider__slide--active {
+  padding-top: 0;
+  font-size: 40px;
+}
+.slider__slide:not(.slider__slide--active) {
+  /* установлено опытным путем, чтобы текст разного кегля был "на одной линии" */
+  padding-top: 14px;
+}
+@media (min-width: 1280px) {
+  .slider__slide {
+    margin-right: 40px;
+
+    font-size: 35px;
+  }
+  .slider__slide--active {
+    font-size: 50px;
+  }
+}
