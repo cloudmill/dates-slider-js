@@ -8,50 +8,54 @@ html {
   font-family: sans-serif;
 }
 
-/*  */
+body {
+  overflow: hidden;
+}
+
+/* container */
 
 .container {
   margin: 100px;
+}
+
+/* slider */
+
+.slider {
   /* overflow: hidden; */
 
   border: 1px solid black;
 }
 
-/*  */
-
-/* это компонент */
-.slider {
-  display: flex;
-}
-/* это "держатель" слайдов (этот элемент будет двигаться, длина этого элемента - сумма длин слайдов */
 .slider__wrapper {
   display: flex;
+}
+.slider__wrapper--fast {
+  transform-origin: right;
 
+  width: 100%;
+}
+.slider__wrapper--move {
   transition: 0.5s;
 }
 
 .slider__slide {
-  margin-right: 20px;
+  margin-right: 25px;
 
   font-size: 25px;
   cursor: pointer;
   transition: 0.5s;
 }
 .slider__slide--active {
-  padding-top: 0;
-  font-size: 40px;
-}
-.slider__slide:not(.slider__slide--active) {
-  /* установлено опытным путем, чтобы текст разного кегля был "на одной линии" */
-  padding-top: 14px;
+  font-size: 35px;
+  color: red;
 }
 @media (min-width: 1280px) {
   .slider__slide {
-    margin-right: 40px;
-
+    margin-right: 45px;
+  
     font-size: 35px;
   }
   .slider__slide--active {
-    font-size: 50px;
+    font-size: 45px;
   }
 }

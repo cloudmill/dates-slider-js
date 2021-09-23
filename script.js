@@ -1,187 +1,151 @@
-window.addEventListener('DOMContentLoaded', () => {
-  const components = document.querySelectorAll('.slider')
+window.addEventListener('load', () => {
+  const sliders = document.querySelectorAll('.slider')
 
-  components.forEach(component => {
-    // data
+  if (sliders.length) {
+    const DUPLICATE_COUNT = 3
     const SLIDE_ACTIVE_CLASS = 'slider__slide--active'
-    const SLIDE_DUPLICATE_CLASS = 'slider__slide--duplicate'
 
-    let wrapper
-    let slides
-
-    let activeIndex
-
-    let duplicateCount
-    
-    let slideSizes
-    let gap
-
-    // methods
-    // *in progress*
-    function setActive(index) {
-      const activeSlide = component.querySelector('.' + SLIDE_ACTIVE_CLASS)
-
-      try {
-        activeSlide.classList.remove(SLIDE_ACTIVE_CLASS)
-      } catch (error) {
-        console.log(error)
-      }
-
-      try {
-        component.querySelector(`[data-slide-index="${index}"]`).classList.add(SLIDE_ACTIVE_CLASS)
-      } catch (error) {
-        console.log(error)
-      }
+    function initIndexes(slides) {
+      slides.forEach((slide, index) => slide.setAttribute('data-slide-index', index))
     }
-
-    function initIndexes() {
-      slides.forEach((slide, index) => {
-        slide.setAttribute('data-slide-index', index)
-      })
-    }
-
-    function initData() {
-      wrapper = component.querySelector('.slider__wrapper')
-      slides = component.querySelectorAll('.slider__slide')
-
-      activeIndex = 1
-
-      duplicateCount = 2
-    }
-
-    function getDuplicate(slide) {
-      const duplicate = slide.cloneNode(true)
-      duplicate.classList.add(SLIDE_DUPLICATE_CLASS)
-      return duplicate
-    }
-
-    function addDuplicate(count) {
-      for (let i = 0; i < count; i++) {
-        for (let i = 0; i < slides.length; i++) {
-          wrapper.prepend(getDuplicate(slides[slides.length - i - 1]))
-          wrapper.append(getDuplicate(slides[i]))
+    function addDuplicate(wrapper, slides) {
+      for (let i = 0; i < DUPLICATE_COUNT; i++) {
+        for (let j = 0; j < slides.length; j++) {
+          wrapper.prepend(slides[slides.length - j - 1].cloneNode(true))
+          wrapper.append(slides[j].cloneNode(true))
         }
       }
     }
+    function calcSize(wrapper, slide) {
+      const slideClone = slide.cloneNode(true)
 
-    function startInit() {
-      initData()
+      slideClone.style.position = 'fixed'
+      slideClone.style.top = '100%'
+      slideClone.style.left = '100%'
 
-      initIndexes()
+      slideClone.classList.remove(SLIDE_ACTIVE_CLASS)
+      
+      wrapper.append(slideClone)
 
-      addDuplicate(duplicateCount)
+      const slideRect = slideClone.getBoundingClientRect()
+      const slideWidth = slideRect.width
 
-      slides[activeIndex].classList.add(SLIDE_ACTIVE_CLASS) 
+      slideClone.remove()
+
+      return slideWidth
     }
+    function calcSizes(wrapper, slides) {
+      const sizes = []
 
-    function getWidth(element) {
-      const rect = element.getBoundingClientRect()
+      slides.forEach(slide => sizes.push(calcSize(wrapper, slide)))
 
-      return rect.width
+      return sizes
     }
+    function calcGap(wrapper, slides) {
+      const slide = slides[0]
+      const slideClone = slide.cloneNode(true)
 
-    function updateSizeData() {
-      gap = getComputedStyle(slides[0]).marginRight.slice(0, -2)
+      slideClone.style.position = 'fixed'
+      slideClone.style.top = '100%'
+      slideClone.style.left = '100%'
 
-      slideSizes = []
+      wrapper.append(slideClone)
 
-      slides.forEach(slide => {
-        const slideSize = {}
+      const slideStyle = getComputedStyle(slideClone)
+      const slideMarginRight = slideStyle.marginRight
 
-        const slideCopy = slide.cloneNode(true)
-
-        slideCopy.style.position = 'fixed'
-        slideCopy.style.top = '100%'
-        slideCopy.style.left = '100%'
-
-        slideCopy.classList.remove(SLIDE_ACTIVE_CLASS)
-        wrapper.append(slideCopy)
-        slideSize.default = getWidth(slideCopy)
-        slideCopy.remove()
-
-        slideCopy.classList.add(SLIDE_ACTIVE_CLASS)
-        wrapper.append(slideCopy)
-        slideSize.active = getWidth(slideCopy)
-        slideCopy.remove()
-
-        slideSizes.push(slideSize)
-      })
+      slideClone.remove()
+      
+      return +slideMarginRight.slice(0, -2)
     }
+    function getDist(moveWrapper, slide, sizes, gap) {
+      const slides = moveWrapper.children
 
-    function updateWrapperPos() {
+      let i = 0
       let dist = 0
+      while (slides[i] !== slide) {
+        dist += gap
+        dist += sizes[i % sizes.length]
 
-      dist += gap * slides.length * duplicateCount
-      dist += gap * activeIndex
+        i++
+      }
 
-      dist += slideSizes.reduce((sum, curSize) => sum + curSize.default, 0) * duplicateCount
-      dist += (() => {
-        let dist = 0
+      return dist
+    }
+    function getPosition(wrapper, slide) {
+      let i = 0
+      while (wrapper.children[i] !== slide) {
+        i++
+      }
 
-        for (let i = 0; i < activeIndex; i++) {
-          dist += slideSizes[i].default
-        }
-
-        return dist
-      })()
-
-      wrapper.style.transform = `translateX(-${dist}px)`
+      return Math.ceil((i + 1) / (wrapper.children.length / (DUPLICATE_COUNT * 2 + 1)))
     }
 
-    function left() {
-      let dist = 0
+    sliders.forEach(slider => {
+      const alignWrapper = slider.querySelector('.slider__wrapper--align')
+      const fastWrapper = slider.querySelector('.slider__wrapper--fast')
+      const moveWrapper = slider.querySelector('.slider__wrapper--move')
+      const slides = slider.querySelectorAll('.slider__slide')
+      let sizes
+      let gap
+      let startIndex = 0
+      let enabled = true
+      let path = []
 
-      dist += gap * slides.length * duplicateCount
+      initIndexes(slides)
+      addDuplicate(moveWrapper, slides) 
+      sizes = calcSizes(moveWrapper, slides)
+      gap = calcGap(moveWrapper, slides)
+      slides[startIndex].classList.add(SLIDE_ACTIVE_CLASS)
+      moveWrapper.style.transform = `translateX(-${getDist(moveWrapper, slides[startIndex], sizes, gap)}px)`
+      window.addEventListener('resize', () => {
+        sizes = calcSizes(moveWrapper, slides)
+        gap = calcGap(moveWrapper, slides)
 
-      dist += slideSizes.reduce((sum, curSize) => sum + curSize.default, 0) * duplicateCount
-
-      dist -= gap
-      dist -= slideSizes[slides.length - 1].default
-
-      wrapper.style.transform = `translateX(-${dist}px)`
-
-      wrapper.addEventListener('transitionend', () => {
-        
+        moveWrapper.style.transform = `translateX(-${getDist(moveWrapper, moveWrapper.querySelector('.' + SLIDE_ACTIVE_CLASS), sizes, gap)}px)`
       })
-    }
-
-    // events
-    startInit()
-
-    window.addEventListener('load', () => {
-      updateSizeData()
-      updateWrapperPos()
-    })
-    
-    window.addEventListener('resize', () => {
-      updateSizeData()
-      updateWrapperPos()
-    })
-
-    component.addEventListener('click', event => {
-      const target = event.target
-
-      const targetSlide = target.closest('.slider__slide')
-
-      if (targetSlide && !targetSlide.classList.contains(SLIDE_ACTIVE_CLASS)) {
-        activeIndex = +targetSlide.getAttribute('data-slide-index')
-
-        component.querySelector('.slider__slide--active').classList.remove(SLIDE_ACTIVE_CLASS)
-
-        if (targetSlide.classList.contains(SLIDE_DUPLICATE_CLASS)) {
-          if (activeIndex === (slides.length - 1)) {
-            slides[0].previousElementSibling.classList.add(SLIDE_ACTIVE_CLASS)
-
-            left()
-          } else {
+      for (let slide of moveWrapper.children) {
+        slide.addEventListener('click', () => {
+          if (enabled) {
+            enabled = false
             
+            moveWrapper.querySelector('.' + SLIDE_ACTIVE_CLASS).classList.remove(SLIDE_ACTIVE_CLASS)
+            slide.classList.add(SLIDE_ACTIVE_CLASS)
+
+            moveWrapper.style.transform = `translateX(-${getDist(moveWrapper, slide, sizes, gap)}px)`
+
+            moveWrapper.addEventListener('transitionend', () => {
+              const position = getPosition(moveWrapper, moveWrapper.querySelector('.' + SLIDE_ACTIVE_CLASS))
+
+
+              if (position !== DUPLICATE_COUNT + 1) {
+                const dist = Math.abs((DUPLICATE_COUNT + 1) - position)
+
+                for (let i = 0; i < dist; i++) {
+                  for (let j = 0; j < slides.length; j++) {
+                    if (position < (DUPLICATE_COUNT + 1)) {
+                      moveWrapper.prepend(moveWrapper.lastElementChild)
+                    } else {
+                      moveWrapper.append(moveWrapper.firstElementChild)
+                    }
+                  }
+                }
+
+                moveWrapper.style.transition = 'none'
+                moveWrapper.style.transform = `translateX(-${getDist(moveWrapper, slide, sizes, gap)}px)`
+                setTimeout(() => moveWrapper.style.transition = '')
+              }
+
+              enabled = true
+            }, {
+              once: true,
+            })
           }
-        } else {
-          component.querySelector(`[data-slide-index="${activeIndex}"]:not(.slider__slide--duplicate)`).classList.add(SLIDE_ACTIVE_CLASS)
-  
-          updateWrapperPos()
-        }
+        })
       }
     })
-  })
+  }
 })
+
+
+// JetBrains Mono, 
