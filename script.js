@@ -83,12 +83,11 @@ window.addEventListener('load', () => {
 
     sliders.forEach(slider => {
       const alignWrapper = slider.querySelector('.slider__wrapper--align')
-      const fastWrapper = slider.querySelector('.slider__wrapper--fast')
       const moveWrapper = slider.querySelector('.slider__wrapper--move')
       const slides = slider.querySelectorAll('.slider__slide')
       let sizes
       let gap
-      let startIndex = 0
+      let startIndex = 0  
       let enabled = true
       let path = []
 
@@ -98,11 +97,13 @@ window.addEventListener('load', () => {
       gap = calcGap(moveWrapper, slides)
       slides[startIndex].classList.add(SLIDE_ACTIVE_CLASS)
       moveWrapper.style.transform = `translateX(-${getDist(moveWrapper, slides[startIndex], sizes, gap)}px)`
+      alignWrapper.style.transform = `translateX(${sizes[(sizes.length + startIndex - 1) % sizes.length] + gap}px)`
       window.addEventListener('resize', () => {
         sizes = calcSizes(moveWrapper, slides)
         gap = calcGap(moveWrapper, slides)
 
         moveWrapper.style.transform = `translateX(-${getDist(moveWrapper, moveWrapper.querySelector('.' + SLIDE_ACTIVE_CLASS), sizes, gap)}px)`
+        alignWrapper.style.transform = `translateX(${sizes[(sizes.length + +moveWrapper.querySelector('.' + SLIDE_ACTIVE_CLASS).previousElementSibling.getAttribute('data-slide-index')) % sizes.length] + gap}px)`
       })
       for (let slide of moveWrapper.children) {
         slide.addEventListener('click', () => {
@@ -113,6 +114,7 @@ window.addEventListener('load', () => {
             slide.classList.add(SLIDE_ACTIVE_CLASS)
 
             moveWrapper.style.transform = `translateX(-${getDist(moveWrapper, slide, sizes, gap)}px)`
+            alignWrapper.style.transform = `translateX(${sizes[(sizes.length + +slide.previousElementSibling.getAttribute('data-slide-index')) % sizes.length] + gap}px)`
 
             moveWrapper.addEventListener('transitionend', () => {
               const position = getPosition(moveWrapper, moveWrapper.querySelector('.' + SLIDE_ACTIVE_CLASS))
@@ -146,6 +148,3 @@ window.addEventListener('load', () => {
     })
   }
 })
-
-
-// JetBrains Mono, 

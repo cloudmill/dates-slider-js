@@ -28,13 +28,7 @@ body {
 
 .slider__wrapper {
   display: flex;
-}
-.slider__wrapper--fast {
-  transform-origin: right;
 
-  width: 100%;
-}
-.slider__wrapper--move {
   transition: 0.5s;
 }
 
